@@ -120,13 +120,13 @@
 
         "import"
         (or ($--> "*" 
-                  `(names, `(, (string->symbol ($ 1)), #f )))
+                  `(names, `(, (string->symbol $$), #f )))
             
             ($-->  (seq "(" import_as_names ")")
                    ($ 2))
  
             import_as_names))
-    `(Importfrom, (car (cdr ($ 2))), (string->symbol ($ 4)), `(level, (process-level (car ($ 2)))))))
+    `(Importfrom, (car (cdr ($ 2))),  ($ 4), `(level, (process-level (car ($ 2)))))))
                   
 
                     ;(if ($ 2)
