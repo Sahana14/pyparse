@@ -77,6 +77,99 @@ base]
 ["~" `Invert]
 ["not" `Not]), ops) '())]))
 
+
+
+(define (process-globals base variables)
+  (display "Base-")
+  (display base)
+  (newline)
+  (display "Varible-")
+  (display variables)
+  (newline)
+
+  (match variables
+   ['()
+    base]
+
+   [(cons (list comma var) rest)
+    (begin
+      (set! base (append base (list (string->symbol var))))
+      (process-globals base  rest))]))
+
+
+
+(define (process-dots base variable)
+  (match variable
+  ['()
+   (begin
+     (set! base (string->symbol base))
+      base)]
+
+  [(cons (list dot var) rest)
+   (begin
+    (set! base (string-append base dot))
+    (set! base (string-append base var))
+    (process-dots base rest))]))
+    ;(process-dots `,base,dot,var rest))]))
+
+
+
+(define (process-as arg variable)
+  (display "Debugging- ")
+  (display arg)
+  (newline)
+  (display variable)
+  (newline)
+  (match variable
+         ['()
+          (arg)]
+
+         [(cons as var)
+            `(, arg ,var)]))
+
+
+
+(define attr (list 'Attribute))
+(define first 1)
+
+(define (process-dotted base variables)
+  ;(display "Base-")
+  ;(display base)
+  ;(newline)
+  ;(display "Varible-")
+  ;(display variables)
+  ;(newline)
+
+  (match variables
+   ['()
+    (begin
+      (set! first 1)
+        base)]
+
+   [(cons (list comma var) rest)
+    (begin
+      (if (equal? first 1)
+        (begin
+            (set! base (append (list 'Name) base))
+            (set! first 0)
+   ;         (display "Base is now - ");
+    ;        (display base)
+     ;       (newline)
+            )
+        (void))
+
+      (set! base (reverse (cons base attr)))
+     ; (display "debug base")
+     ; (display base)
+     ; (newline)
+      (set! base (append base (list (string->symbol var))))
+     ; (display "debug base1")
+     ; (display base)
+     ; (newline) 
+      (process-dotted base  rest))]))
+
+
+
 (define opers '(ops))
 (define comps '(comparators))
 ;(define first 0)
