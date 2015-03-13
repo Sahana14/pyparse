@@ -78,14 +78,15 @@ base]
 ["not" `Not]), ops) '())]))
 
 
-(define (process-testlist arg1 arg2)
-(match arg2
-['()
-arg1]
-[_
-        (begin
-        (set! arg1 (append  arg1 (list (car arg2))))
-        (process-testlist arg1 (rest arg2)))]))
+(define (process-level base)
+
+  (if (equal? base null)
+    0
+  (match (car base)
+            ["." (+ (process-level (cdr base)) 1)]
+
+            ["..." (+ (process-level (cdr base)) 3)])))
+
 
 
 (define (process-dotted-names base variables)
@@ -108,12 +109,12 @@ arg1]
 
 
 (define (process-globals base variables)
-  (display "Base-")
-  (display base)
-  (newline)
-  (display "Varible-")
-  (display variables)
-  (newline)
+ ; (display "Base-")
+  ;(display base)
+ ; (newline)
+ ; (display "Varible-")
+ ; (display variables)
+ ; (newline)
 
   (match variables
    ['()
@@ -143,11 +144,11 @@ arg1]
 
 
 (define (process-as arg variable)
-  (display "Debugging- ")
-  (display arg)
-  (newline)
-  (display variable)
-  (newline)
+  ;(display "Debugging- ")
+  ;(display arg)
+  ;(newline)
+  ;(display variable)
+  ;(newline)
   (match variable
          ['()
           (arg)]
@@ -231,7 +232,7 @@ arg1]
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start import_as_names)
+   (start import_stmt)
    ;(start test)
    
    (error (λ (tok-ok? tok-name tok-value)
