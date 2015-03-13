@@ -8,7 +8,10 @@
 
 
 ((single_input (or 'NEWLINE simple_stmt (seq compound_stmt 'NEWLINE)))
- (file_input (seq (rep (or 'NEWLINE stmt)) 'ENDMARKER))
+ 
+(file_input ($-->   (seq (rep (or 'NEWLINE stmt)) 'ENDMARKER)
+                    `(Module, ($ 1))))
+
  (eval_input (seq testlist (rep 'NEWLINE) 'ENDMARKER))
  (decorator (seq "@" dotted_name (opt (seq "(" (opt arglist) ")")) 'NEWLINE))
  (decorators (rep+ decorator))
@@ -60,16 +63,25 @@
       (seq "**" vfpdef)))
  (vfpdef 'NAME)
  (stmt (or simple_stmt compound_stmt))
- (simple_stmt (seq small_stmt (rep (seq ";" small_stmt)) (opt ";") 'NEWLINE))
- (small_stmt
-  (or expr_stmt
-      del_stmt
-      pass_stmt
-      flow_stmt
-      import_stmt
-      global_stmt
-      nonlocal_stmt
-      assert_stmt))
+ 
+;(simple_stmt (seq small_stmt (rep (seq ";" small_stmt)) (opt ";") 'NEWLINE))
+
+ (simple_stmt ($--> (seq small_stmt (rep ($--> (seq ";" small_stmt) 
+                                               ($ 2))) (opt ";") 'NEWLINE) 
+                    (cons ($ 1) ($ 2))))
+
+(small_stmt
+    ;($-->
+    (or expr_stmt
+          del_stmt
+          pass_stmt
+          flow_stmt
+          import_stmt
+          global_stmt
+          nonlocal_stmt
+          assert_stmt))
+    ;($ 1)))
+
  (expr_stmt
   (seq
    testlist_star_expr
