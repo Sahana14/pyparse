@@ -84,29 +84,11 @@
                       `(Continue)))
 
 
- (return_stmt ($-->  (seq "return"  (opt ($-->  testlist
-                                                (begin
-                                                    (display ($ 2))                                          
-                                                    (display "-ARG-1:")                                          
-                                                    (display ($ 1))
-                                                    (newline)                                          
-                                                    ($ 2)))))
-                    (begin
-                     (display ">ARG-1: ")
-                     (display ($ 1))
-                     (display " >ARG-1: ")
-                     (display ($ 2))
-                     (newline)
-                     (cond
-                        ;[(if ($ 2)
-                        ;   `(Return ($ 2))
-                        ;  `(Return))]
+ (return_stmt ($-->  (seq "return"  (opt testlist))
 
-                        ;[(equal? ($ 2) #f) `(Return)]
-
-                         [(if ($ 2)
-                              `(Return, ($ 2))
-                          `(Return))]))))
+                      (if ($ 2)
+                          `(Return, ($ 2))
+                      `(Return))))
 
  
 (yield_stmt yield_expr)
@@ -115,10 +97,10 @@
  (raise_stmt ($--> (seq "raise" (opt ($-->   (seq test (opt ($--> (seq "from" test)
                                                              ($ 2))))
                                             (if ($ 2)
-                                                (($ 2) ($ 2))
-                                             ($ 2)))))
+                                                `(,($ 1), ($ 2))
+                                             ($ 1)))))
                   (if ($ 2)
-                    `(Raise, ($ 1), ($ 2))
+                    `(Raise, ($ 2))
                     `(Raise))))
 
 
@@ -160,7 +142,7 @@
                        ;(begin
                         ;    (display "Invoking dotted_as_names")
                         ;    (newline)
-                            `(, @(process-globals($ 1) ($ 2)))))
+                            `(, @(process-globals ($ 1) ($ 2)))))
 
 
  (dotted_name ($-->  (seq 'NAME (rep (seq "." 'NAME)))
@@ -183,7 +165,12 @@
 
 
 
- (assert_stmt (seq "assert" test (opt (seq "," test))))
+ (assert_stmt ($-->   (seq "assert" test  (opt ($--> (seq "," test)
+                                                     ($ 2))))
+                         (if ($ 3)
+                            `(Assert, ($ 2), ($ 3))
+                        `(Assert, ($ 2)))))
+
  (compound_stmt
   (or if_stmt
       while_stmt
