@@ -110,7 +110,18 @@
 
  
 (yield_stmt yield_expr)
- (raise_stmt (seq "raise" (opt (seq test (opt (seq "from" test))))))
+
+
+ (raise_stmt ($--> (seq "raise" (opt ($-->   (seq test (opt ($--> (seq "from" test)
+                                                             ($ 2))))
+                                            (if ($ 2)
+                                                (($ 2) ($ 2))
+                                             ($ 2)))))
+                  (if ($ 2)
+                    `(Raise, ($ 1), ($ 2))
+                    `(Raise))))
+
+
  (import_stmt (or import_name import_from))
 
 
