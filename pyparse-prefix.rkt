@@ -187,14 +187,6 @@ base]
      ; (newline) 
       (process-dotted base  rest))]))
 
-(define (process-testlist arg1 arg2)
-(match arg2
-['()
-arg1]
-[_
-        (begin
-        (set! arg1 (append  arg1 (list (car arg2))))
-        (process-testlist arg1 (rest arg2)))]))
 
 
 (define opers '(ops))
@@ -230,7 +222,7 @@ arg1]
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start dotted_as_names)
+   (start import_as_names)
    ;(start test)
    
    (error (λ (tok-ok? tok-name tok-value)

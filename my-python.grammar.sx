@@ -118,8 +118,14 @@
 
 
 
- (import_as_name ($-->  (seq 'NAME (opt (seq "as" 'NAME)))
-                        `(Import ,(process-as ($ 2)), ($ 1))))
+ (import_as_name ($-->  (seq 'NAME (opt ($--> (seq "as" 'NAME)
+                                               (string->symbol ($ 2)))))
+                        (cond
+                            [(equal? ($ 2) #f) ($ 1)]
+
+                            [(if ($ 2)
+                                `(, (string->symbol ($ 1)), ($ 2))
+                            (string->symbol ($ 1)))])))
 
  (dotted_as_name ($-->  (seq dotted_name (opt ($--> (seq "as" 'NAME)
                                              (string->symbol ($ 2)))))
@@ -134,7 +140,8 @@
 
 
  (import_as_names
-  (seq import_as_name (rep (seq "," import_as_name)) (opt ",")))
+  ($--> (seq import_as_name (rep (seq "," import_as_name)) (opt ","))
+        (process-dotted-names (list ($ 1)) ($ 2))))
 
 
 (dotted_as_names ($--> (seq dotted_as_name (rep (seq "," dotted_as_name)))
