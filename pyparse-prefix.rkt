@@ -78,6 +78,15 @@ base]
 ["not" `Not]), ops) '())]))
 
 
+(define (process-testlist arg1 arg2)
+(match arg2
+['()
+arg1]
+[_
+        (begin
+        (set! arg1 (append  arg1 (list (car arg2))))
+        (process-testlist arg1 (rest arg2)))]))
+
 
 (define (process-dotted-names base variables)
   ;(display "Base-")
