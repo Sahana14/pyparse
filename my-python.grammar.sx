@@ -107,7 +107,7 @@
 
 
  (import_name ($--> (seq "import" dotted_as_names)
-                    `(Import ($ 2))))
+                    `(Import, ($ 2))))
 
  (import_from
   (seq
@@ -294,17 +294,8 @@
  (subscript (or test (seq (opt test) ":" (opt test) (opt sliceop))))
  (sliceop (seq ":" (opt test)))
  (exprlist
-  ($--> (seq (or expr star_expr) (rep (car #'("," #,(or expr star_expr)))) (opt ","))
-        (begin
-        (cond
-        [(equal? ($ 2) #f) ($ 1)]
-        [`(Tuple, @(process-testlist (list ($ 1)) ($ 2)))]))))
- (testlist ($--> (seq test (rep (car #'("," #,test))) (opt ","))
-                 (begin
-                 (cond
-                 [(equal? ($ 2) #f) ($ 1)]
-                 [`(Tuple, @(process-testlist (list ($ 1)) ($ 2)))]))))
-
+  (seq (or expr star_expr) (rep (seq "," (or expr star_expr))) (opt ",")))
+ (testlist (seq test (rep (seq "," test)) (opt ",")))
  (dictorsetmaker
   (or (seq
        test
