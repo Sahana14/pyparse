@@ -71,29 +71,83 @@
  (augassign
   (or "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>=" "**=" "//="))
  (del_stmt (seq "del" exprlist))
- (pass_stmt "pass")
+
+ (pass_stmt ($--> "pass"
+                  `(Pass)))
+
  (flow_stmt (or break_stmt continue_stmt return_stmt raise_stmt yield_stmt))
- (break_stmt "break")
- (continue_stmt "continue")
+
+ (break_stmt ($--> "break"
+                    `(Break)))
+
+ (continue_stmt ($--> "continue"
+                      `(Continue)))
+
+
  (return_stmt (seq "return" (opt testlist)))
  (yield_stmt yield_expr)
  (raise_stmt (seq "raise" (opt (seq test (opt (seq "from" test))))))
  (import_stmt (or import_name import_from))
- (import_name (seq "import" dotted_as_names))
+
+
+ (import_name ($--> (seq "import" dotted_as_names)
+                    `(Import ($ 2))))
+
  (import_from
   (seq
    "from"
    (or (seq (rep (or "." "...")) dotted_name) (rep+ (or "." "...")))
    "import"
    (or "*" (seq "(" import_as_names ")") import_as_names)))
- (import_as_name (seq 'NAME (opt (seq "as" 'NAME))))
- (dotted_as_name (seq dotted_name (opt (seq "as" 'NAME))))
+
+
+
+ (import_as_name ($-->  (seq 'NAME (opt (seq "as" 'NAME)))
+                        `(Import ,(process-as ($ 2)), ($ 1))))
+
+ (dotted_as_name ($-->  (seq dotted_name (opt ($--> (seq "as" 'NAME)
+                                             (string->symbol ($ 2)))))
+                        (cond
+                            [(equal? ($ 2) #f) ($ 1)]
+
+                            [(if ($ 2)
+                                `(, ($ 1), ($ 2))
+                            ($ 1))])))
+
+
+
+
  (import_as_names
   (seq import_as_name (rep (seq "," import_as_name)) (opt ",")))
- (dotted_as_names (seq dotted_as_name (rep (seq "," dotted_as_name))))
- (dotted_name (seq 'NAME (rep (seq "." 'NAME))))
- (global_stmt (seq "global" 'NAME (rep (seq "," 'NAME))))
- (nonlocal_stmt (seq "nonlocal" 'NAME (rep (seq "," 'NAME))))
+
+
+(dotted_as_names ($--> (seq dotted_as_name (rep (seq "," dotted_as_name)))
+                       ;(begin
+                        ;    (display "Invoking dotted_as_names")
+                        ;    (newline)
+                            `(, @(process-globals($ 1) ($ 2)))))
+
+
+ (dotted_name ($-->  (seq 'NAME (rep (seq "." 'NAME)))
+                        (begin
+                            ;(display "Invoking dotted_name")
+                            ;(newline)
+                        `( ,@(process-dots ($ 1) ($ 2))))))
+                    ;    (string->symbol (string-append ($ 1) ($ 2))))))
+                    ;`(, @(process-dotted (list (string->symbol ($ 1))) ($ 2)))))
+
+ (global_stmt  ($--> (seq "global" 'NAME (rep (seq "," 'NAME)))
+                     `(Global ,@(process-globals (list (string->symbol ($ 2))) ($ 3)))))
+
+
+ (nonlocal_stmt ($--> (seq "nonlocal" 'NAME (rep (seq "," 'NAME)))
+                     `(Nonlocal ,@(process-globals (list (string->symbol ($ 2))) ($ 3)))))
+
+
+
+
+
+
  (assert_stmt (seq "assert" test (opt (seq "," test))))
  (compound_stmt
   (or if_stmt
