@@ -64,8 +64,6 @@
  (vfpdef 'NAME)
  (stmt (or simple_stmt compound_stmt))
  
-;(simple_stmt (seq small_stmt (rep (seq ";" small_stmt)) (opt ";") 'NEWLINE))
-
  (simple_stmt ($--> (seq small_stmt (rep ($--> (seq ";" small_stmt) 
                                                ($ 2))) (opt ";") 'NEWLINE) 
                     (cons ($ 1) ($ 2))))
@@ -83,15 +81,36 @@
     ;($ 1)))
 
  (expr_stmt
-  (seq
+  ($--> (seq
    testlist_star_expr
-   (or (seq augassign (or yield_expr testlist))
-       (rep (seq "=" (or yield_expr testlist_star_expr))))))
+   (or ($--> (seq augassign (or yield_expr testlist)) (list ($ 1) ($ 2)))
+       (rep ($--> (seq "=" (or yield_expr testlist_star_expr)) (list ($ 1) ($ 2))))))
+        (begin
+        (cond
+        [(equal? ($ 2) '()) `(Expr, ($ 1))]
+        [(process-augassign ($ 1) ($ 2))]))))
+
  (testlist_star_expr
-  (seq (or test star_expr) (rep (seq "," (or test star_expr))) (opt ",")))
+  ($--> (seq (or test star_expr) (rep (car #'("," #,(or test star_expr)))) (opt ","))
+        (cond
+        [(equal? ($ 2) '()) (if ($ 3) `(Tuple, ($ 1)) ($ 1))]
+        [`(Tuple, @(process-testlist (list ($ 1)) ($ 2)))])))
  (augassign
-  (or "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>=" "**=" "//="))
- (del_stmt (seq "del" exprlist))
+  (or ($--> "+="
+      "-="
+       "*="
+      "/="
+      "%="
+      "&="
+      "|="
+      "^="
+      "<<="
+      ">>="
+      "**="
+      "//=" $$)))
+ (del_stmt ($--> (seq "del" exprlist)
+                 `(Delete, ($ 2))))
+
 
  (pass_stmt ($--> "pass"
                   `(Pass)))
@@ -340,8 +359,17 @@
  (subscript (or test (seq (opt test) ":" (opt test) (opt sliceop))))
  (sliceop (seq ":" (opt test)))
  (exprlist
-  (seq (or expr star_expr) (rep (seq "," (or expr star_expr))) (opt ",")))
- (testlist (seq test (rep (seq "," test)) (opt ",")))
+  ($--> (seq (or expr star_expr) (rep (car #'("," #,(or expr star_expr)))) (opt ","))
+        (begin
+        (cond
+        [(equal? ($ 2) '()) (if ($ 3) `(Tuple, ($ 1)) ($ 1))]
+        [`(Tuple, @(process-testlist (list ($ 1)) ($ 2)))]))))
+ (testlist ($--> (seq test (rep (car #'("," #,test))) (opt ","))
+                 (begin
+                 (cond
+                 [(equal? ($ 2) '()) (if ($ 3) `(Tuple, ($ 1)) ($ 1))]
+                 [`(Tuple, @(process-testlist (list ($ 1)) ($ 2)))]))))
+
  (dictorsetmaker
   (or (seq
        test

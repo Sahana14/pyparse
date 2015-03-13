@@ -75,6 +75,29 @@ base]
 		       [(equal? op "|") `BitOr]), 
 		  exp) rest)]))
 
+(define (process-augassign base ops)
+(begin
+(match ops
+['()
+base]
+[(cons op exp)
+ (begin
+      (if (equal? (car op) "=") (process-assign base ops)
+                 `(AugAssign, base ,
+                 (cond [(equal? op "+=") `Add]
+                       [(equal? op "-=") `Sub]
+                       [(equal? op "*=") `Mult]
+                       [(equal? op "/=") `Div]
+                       [(equal? op "%=") `Mod]
+                       [(equal? op "//=") `FloorDiv]
+                       [(equal? op "<<=") `LShift]
+                       [(equal? op ">>=") `RShift]
+                       [(equal? op "&=") `BitAnd]
+                       [(equal? op "^=") `BitXor]
+                       [(equal? op "|=") `BitOr]),
+                  (car exp)))) ]
+)))
+
 (define (process-unops base ops)
 (match ops
 ['()
@@ -206,7 +229,34 @@ base]
      ; (newline) 
       (process-dotted base  rest))]))
 
+(define (process-testlist arg1 arg2)
+(match arg2
+['()
+arg1]
+[_
+        (begin
+        (set! arg1 (append  arg1 (list (car arg2))))
+        (process-testlist arg1 (rest arg2)))]))
 
+(define tar '(targets))
+(define val '())
+
+(define (process-assign base ops)
+(begin
+
+(match ops
+['()
+(begin
+    (set! base `(Assign, tar, `(value, val)))
+ base)]
+[(cons (list op exp) rest)
+                   (begin
+                   ;(display rest)
+
+                   (set! tar (append tar (list base)))
+                   (set! val exp)
+                   ;(set! tar (append tar val))
+                   (process-assign exp rest))])))
 
 (define opers '(ops))
 (define comps '(comparators))
