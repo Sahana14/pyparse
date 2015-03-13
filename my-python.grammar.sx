@@ -85,7 +85,6 @@
 
 
  (return_stmt ($-->  (seq "return"  (opt testlist))
-
                       (if ($ 2)
                           `(Return, ($ 2))
                       `(Return))))
@@ -142,7 +141,8 @@
                        ;(begin
                         ;    (display "Invoking dotted_as_names")
                         ;    (newline)
-                            `(, @(process-globals ($ 1) ($ 2)))))
+                             (process-dotted-names (list ($ 1)) ($ 2))))
+                            ;`(, @(process-dotted-names (list ($ 1)) ($ 2)))))
 
 
  (dotted_name ($-->  (seq 'NAME (rep (seq "." 'NAME)))
