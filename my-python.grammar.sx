@@ -10,7 +10,7 @@
 ((single_input (or 'NEWLINE simple_stmt (seq compound_stmt 'NEWLINE)))
  
 (file_input ($-->   (seq (rep (or 'NEWLINE stmt)) 'ENDMARKER)
-                    `(Module, ($ 1))))
+                    `(Module, @($ 1))))
 
  (eval_input (seq testlist (rep 'NEWLINE) 'ENDMARKER))
  (decorator (seq "@" dotted_name (opt (seq "(" (opt arglist) ")")) 'NEWLINE))
@@ -64,12 +64,13 @@
  (vfpdef 'NAME)
  (stmt (or simple_stmt compound_stmt))
  
- (simple_stmt ($--> (seq small_stmt (rep ($--> (seq ";" small_stmt) 
-                                               ($ 2))) (opt ";") 'NEWLINE) 
-                    (cons ($ 1) ($ 2))))
+ (simple_stmt ($--> (seq small_stmt (rep (seq ";" small_stmt)
+                                               ) (opt ";") 'NEWLINE)
+                    (cond
+                        [(equal? (map second ($ 2)) '()) ($ 1)]
+                        [(cons ($ 1) (map second ($ 2)))])))
 
-(small_stmt
-    ;($-->
+ (small_stmt
     (or expr_stmt
           del_stmt
           pass_stmt
@@ -78,8 +79,7 @@
           global_stmt
           nonlocal_stmt
           assert_stmt))
-    ;($ 1)))
-
+    
  (expr_stmt
   ($--> (seq
    testlist_star_expr
@@ -389,5 +389,10 @@
  (comp_for (seq "for" exprlist "in" or_test (opt comp_iter)))
  (comp_if (seq "if" test_nocond (opt comp_iter)))
  (encoding_decl 'NAME)
- (yield_expr (seq "yield" (opt yield_arg)))
- (yield_arg (or (seq "from" test) testlist)))
+ (yield_expr ($--> (seq "yield" (opt yield_arg))
+                   (cond
+                       [(equal? ($ 2) '()) `(Yield)]
+                       [($ 2)])))
+ (yield_arg (or ($--> (seq "from" test) `(YieldFrom, ($ 2)))
+               ($--> testlist `(Yield, $$)))))
+                                                  
