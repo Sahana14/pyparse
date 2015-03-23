@@ -356,12 +356,18 @@
       ($--> (seq "[" subscriptlist "]")
 		(cons ($ 1) ($ 2)))
       (seq "." 'NAME)))
- (subscriptlist ($--> (seq subscript (rep (seq "," subscript)) (opt ","))
+ (subscriptlist ($--> (seq subscript (rep ($--> (seq "," subscript) ($ 2))) (opt ","))
 			(cond
 			[(equal? ($ 2) '()) (cond
-						[(not (equal? ($ 3) #f)) `(Index, `(Tuple, ($ 1)))])]
-			[(equal? (car ($ 2)) 'Slice) `(ExtSlice, (cdr ($ 1)))]
-			[`(Index, ($ 1))])))
+						[(not (equal? ($ 3) #f)) (if (equal? (car ($ 1)) 'Slice) `(ExtSlice, ($ 1))
+													 `(Index, `(Tuple, ($ 1))))]
+						[(equal? (car ($ 1)) 'Slice) ($ 1)]
+						[`(Index, ($ 1))])]
+			[(equal? (car (car ($ 2))) 'Slice) 
+			  (if (equal? (car ($ 1)) 'Slice)`(ExtSlice, ($ 1), @($ 2)) 
+					`(ExtSlice, `(Index, ($ 1)), @($ 2)))]
+			[(equal? (car ($ 1)) 'Slice) `(ExtSlice,($ 1))]
+			[`(Index, `(Tuple, ($ 1), @($ 2)))])))
 
  (subscript (or test 
 		($--> (seq (opt test) ":" (opt test) (opt sliceop)) `(Slice, ($ 1), ($ 3), ($ 4)))))
