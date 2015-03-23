@@ -269,7 +269,7 @@
  (with_stmt (seq "with" with_item (rep (seq "," with_item)) ":" suite))
  (with_item (seq test (opt (seq "as" expr))))
  (except_clause (seq "except" (opt (seq test (opt (seq "as" 'NAME))))))
- (suite (or simple_stmt (seq 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT)))
+ (suite (or simple_stmt ($--> (seq 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT) ($ 3))))
  (test (or ($--> (seq or_test (opt #'("if" #,or_test "else" #,test)))
 		 (cond 
 			[(equal? ($ 2) #f) ($ 1)]
@@ -353,11 +353,19 @@
    (or comp_for (seq (rep (seq "," (or test star_expr))) (opt ",")))))
  (trailer
   (or (seq "(" (opt arglist) ")")
-      (seq "[" subscriptlist "]")
+      ($--> (seq "[" subscriptlist "]")
+		(cons ($ 1) ($ 2)))
       (seq "." 'NAME)))
- (subscriptlist (seq subscript (rep (seq "," subscript)) (opt ",")))
- (subscript (or test (seq (opt test) ":" (opt test) (opt sliceop))))
- (sliceop (seq ":" (opt test)))
+ (subscriptlist ($--> (seq subscript (rep (seq "," subscript)) (opt ","))
+			(cond
+			[(equal? ($ 2) '()) (cond
+						[(not (equal? ($ 3) #f)) `(Index, `(Tuple, ($ 1)))])]
+			[(equal? (car ($ 2)) 'Slice) `(ExtSlice, (cdr ($ 1)))]
+			[`(Index, ($ 1))])))
+
+ (subscript (or test 
+		($--> (seq (opt test) ":" (opt test) (opt sliceop)) `(Slice, ($ 1), ($ 3), ($ 4)))))
+ (sliceop ($--> (seq ":" (opt test)) ($ 2)))
  (exprlist
   ($--> (seq (or expr star_expr) (rep (car #'("," #,(or expr star_expr)))) (opt ","))
         (begin
@@ -386,8 +394,14 @@
        (seq "**" test))))
  (argument (or (seq test (opt comp_for)) (seq test "=" test)))
  (comp_iter (or comp_for comp_if))
- (comp_for (seq "for" exprlist "in" or_test (opt comp_iter)))
- (comp_if (seq "if" test_nocond (opt comp_iter)))
+ (comp_for ($--> (seq "for" exprlist "in" or_test (opt comp_iter))
+		 (cond
+			[(equal? ($ 5) '()) `(for, ($ 2) in, ($ 4) if)]
+			[`(for, ($ 2) in, ($ 4), ($ 5) if)])))
+ (comp_if ($--> (seq "if" test_nocond (opt comp_iter))
+		(cond
+		[(equal? ($ 3) '()) ($ 2)]
+		[(cons ($ 2) ($ 3))])))
  (encoding_decl 'NAME)
  (yield_expr ($--> (seq "yield" (opt yield_arg))
                    (cond

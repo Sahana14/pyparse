@@ -50,7 +50,7 @@
 (define (process-trailers base trailers)
  (match trailers
   ['()      base]
-  [else     (error "can't handle trailers yet")]))
+  [(cons (cons "[" a) rest) `(Subscript, base,a)]))
 
 
 ;; You may want to put definitions here rather than defining
@@ -291,7 +291,7 @@ arg1]
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start small_stmt)
+   (start file_input)
    ;(start test)
    
    (error (λ (tok-ok? tok-name tok-value)
