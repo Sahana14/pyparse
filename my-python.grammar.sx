@@ -62,7 +62,9 @@
        (opt (seq "," "**" vfpdef)))
       (seq "**" vfpdef)))
  (vfpdef 'NAME)
- (stmt (or simple_stmt compound_stmt))
+
+ (stmt ($-->    (or simple_stmt compound_stmt)
+                $$))
  
  (simple_stmt ($--> (seq small_stmt (rep (seq ";" small_stmt)
                                                ) (opt ";") 'NEWLINE)
@@ -143,7 +145,8 @@
                     `(Raise))))
 
 
- (import_stmt (or import_name import_from))
+ (import_stmt ($--> (seq (or import_name import_from))
+                    ($ 1)))
 
 
  (import_name ($--> (seq "import" dotted_as_names)
