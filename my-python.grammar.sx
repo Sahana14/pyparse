@@ -265,6 +265,7 @@
    `(If, `(test, ($ 2)), `(body ,@($ 4)), `(orelse, @(process-if-ladder ($ 5) ($ 6))))))
 
 
+;TODO  - There is an entanglement of suite in else's suite. I suspect it to be a bug with suite.
  (while_stmt ($-->  (seq "while" test ":" suite (opt ($--> (seq "else" ":" suite)
                                                            ($ 3))))
                     (if ($ 5)
@@ -272,8 +273,13 @@
                       `(While, `(test, ($ 2)), `(body ,@($ 4)), `(orelse)))))
 
  (for_stmt
-  (seq "for" exprlist "in" testlist ":" suite (opt (seq "else" ":" suite))))
- (try_stmt
+  ($--> (seq "for" exprlist "in" testlist ":" suite (opt ($-->    (seq "else" ":" suite)
+                                                                  ($ 3))))
+        (if ($ 7)
+             `(For, `(target, ($ 2)), `(iter, ($ 4)), `(body ,@($ 6)), `(orelse, @($ 7)))
+         `(For, `(target, ($ 2)), `(iter, ($ 4)), `(body ,@($ 6)), `(orelse))))) 
+
+(try_stmt
   (seq
    "try"
    ":"
@@ -389,12 +395,16 @@
  (subscript (or test 
 		($--> (seq (opt test) ":" (opt test) (opt sliceop)) `(Slice, ($ 1), ($ 3), ($ 4)))))
  (sliceop ($--> (seq ":" (opt test)) ($ 2)))
+
+
  (exprlist
   ($--> (seq (or expr star_expr) (rep (car #'("," #,(or expr star_expr)))) (opt ","))
         (begin
         (cond
         [(equal? ($ 2) '()) (if ($ 3) `(Tuple, ($ 1)) ($ 1))]
         [`(Tuple, @(process-testlist (list ($ 1)) ($ 2)))]))))
+
+
  (testlist ($--> (seq test (rep (car #'("," #,test))) (opt ","))
                  (begin
                  (cond
@@ -408,6 +418,8 @@
        test
        (or comp_for (seq (rep (seq "," test ":" test)) (opt ","))))
       (seq test (or comp_for (seq (rep (seq "," test)) (opt ","))))))
+
+
  (classdef (seq "class" 'NAME (opt (seq "(" (opt arglist) ")")) ":" suite))
  (arglist
   (seq
