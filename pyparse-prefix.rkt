@@ -40,7 +40,17 @@
 
 (define-empty-tokens SPECIAL (ENDMARKER NEWLINE INDENT DEDENT LIT EOF))
 
+(define (process-if-ladder elif-ladder else-block)
+  ;(display elif-ladder)
+  ;(newline)
+  (match elif-ladder
+    [(cons (list elif test-cond colon if-body)  rest)
+     `(If , `(test , test-cond), `(body ,@if-body), `(orelse ,@(process-if-ladder rest else-block)))]
 
+    [else
+      (if else-block
+        else-block
+        `())]))
 
 ;; Auxiliary definitions:
 
