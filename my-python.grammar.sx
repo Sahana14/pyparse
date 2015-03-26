@@ -280,19 +280,61 @@
          `(For, `(target, ($ 2)), `(iter, ($ 4)), `(body ,@($ 6)), `(orelse))))) 
 
 (try_stmt
-  (seq
-   "try"
-   ":"
-   suite
-   (or (seq
-        (rep+ (seq except_clause ":" suite))
-        (opt (seq "else" ":" suite))
-        (opt (seq "finally" ":" suite)))
-       (seq "finally" ":" suite))))
+  ($--> (seq
+        "try"
+        ":"
+        suite
+        (or ($-->   (seq
+                        (rep+ ($-->   (seq except_clause ":" suite)
+                                      ($ 3)))
+                        (opt ($-->  (seq "else" ":" suite)
+                                    ($ 3)))
+                        (opt ($-->  (seq "finally" ":" suite)
+                                    ($ 3))))
+                    (if ($ 2)
+                        (if ($ 3)
+                            `(, `(handlers, ($ 1)), `(orelse ,($ 2)), `(finalbody, ($ 3)))
+                        `(, `(handlers, ($ 1)), `(orelse ,($ 2)), `(finalbody)))
+                     (if ($ 3)
+                            `(, `(handlers, ($ 1)), `(orelse), `(finalbody, ($ 3)))
+                          `(, (cons 'handlers ($ 1)), `(orelse), `(finalbody))))))
+
+
+                        ($-->   (seq "finally" ":" suite)
+                                `(, `(handlers), `(orelse), `(finalbody, ($ 3)))))
+
+        `(Try, `(body, @($ 3)),($ 4))))
+ 
+
+                    ;`(, (cons 'handlers ($ 1)), (cons 'orelse (if ($ 2) ($ 2) '())), (cons 'finalbody (if ($ 3) ($ 3) '())))))
+                    ;(if ($ 2)
+                    ;    (if ($ 3)
+                    ;        `(, `(handlers, ($ 1)), `(orelse ,($ 2)), `(finalbody, ($ 3)))
+                    ;    `(, `(handlers, ($ 1)), `(orelse ,($ 2)), `(finalbody)))
+                    ; (if ($ 3)
+                    ;        `(, `(handlers, ($ 1)), `(orelse), `(finalbody, ($ 3)))
+                    ;      `(, (cons 'handlers ($ 1)), `(orelse), `(finalbody))))))
+                        ; (`(handlers, ($ 1)), `(orelse), `(finalbody) )))))
+
+
+
  (with_stmt (seq "with" with_item (rep (seq "," with_item)) ":" suite))
  (with_item (seq test (opt (seq "as" expr))))
- (except_clause (seq "except" (opt (seq test (opt (seq "as" 'NAME))))))
+ 
+ (except_clause ($-->   (seq "except" (opt ($-->    (seq test (opt ($--> (seq "as" 'NAME)
+                                                                    (string->symbol ($ 2)))))
+                                                    (if ($ 2)
+                                                        `(, ($ 1), ($ 2))
+                                                     `($ 1)))))
+                        (if ($ 2)
+                            `(except, ($ 2))
+                         ;(list 'except #f #f))))
+                         `(except, #f, #f))))
+
+
  (suite (or simple_stmt ($--> (seq 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT) ($ 3))))
+ 
+
  (test (or ($--> (seq or_test (opt #'("if" #,or_test "else" #,test)))
 		 (cond 
 			[(equal? ($ 2) #f) ($ 1)]
