@@ -413,9 +413,13 @@
       ($--> "False" `(NameConstant False))))
 
  (testlist_comp
+  ($--> 
   (seq
    (or test star_expr)
-   (or comp_for (seq (rep (seq "," (or test star_expr))) (opt ",")))))
+   (or comp_for ($--> (seq (rep ($--> (seq "," (or test star_expr)) ($ 2))) (opt ",")) (cons ($ 1) ($ 2)))))
+    (cond
+    [(equal? (car ($ 2)) '()) `(List, ($ 2))])))
+
  (trailer
   (or (seq "(" (opt arglist) ")")
       ($--> (seq "[" subscriptlist "]")

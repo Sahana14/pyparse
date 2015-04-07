@@ -60,8 +60,8 @@
 (define (process-trailers base trailers)
  (match trailers
   ['()      base]
-  [(cons (cons "[" a) rest) `(Subscript, base,a)]))
-
+  [(cons (cons "[" a) rest) `(Subscript, base,a)]
+  [_ (cons base trailers)]))
 
 ;; You may want to put definitions here rather than defining
 ;; them in the grammar itself.
@@ -92,7 +92,7 @@ base]
 base]
 [(cons op exp)
  (begin
-      (if (equal? (car op) "=") (process-assign base ops)
+      (if (equal? (car op) "=") (process-assign (list base) ops)
                  `(AugAssign, base ,
                  (cond [(equal? op "+=") `Add]
                        [(equal? op "-=") `Sub]
@@ -248,7 +248,7 @@ arg1]
         (set! arg1 (append  arg1 (list (car arg2))))
         (process-testlist arg1 (rest arg2)))]))
 
-(define tar '(targets))
+(define tar '())
 (define val '())
 
 (define (process-assign base ops)
@@ -257,16 +257,13 @@ arg1]
 (match ops
 ['()
 (begin
-    (set! base `(Assign, tar, `(value, val)))
+    (set! base `(Assign, `(targets ,@base), `(value, val)))
  base)]
 [(cons (list op exp) rest)
                    (begin
-                   ;(display rest)
-
-                   (set! tar (append tar (list base)))
-                   (set! val exp)
+                   (cond [(not (empty? rest)) (set! base (append base (list exp)))] 		   	 [(set! val exp)])
                    ;(set! tar (append tar val))
-                   (process-assign exp rest))])))
+                   (process-assign base rest))])))
 
 (define opers '(ops))
 (define comps '(comparators))
